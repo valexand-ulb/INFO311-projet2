@@ -19,7 +19,7 @@ import util
 
 from game import Agent
 
-
+PACMAN = 0
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
@@ -79,8 +79,53 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        "*** Selon le pseudocode présent sur wikipédia : https://fr.wikipedia.org/wiki/Algorithme_minimax***"
+        self.maximise(self.depth, state)
+        return self.move
+
+    def maximise(self, i_depth, t_state: GameState):
+        """
+        Partie maximalisante de l'algorithme de minimax.
+        Elle ne concerne que l'agent pacman (dont le but est de ne pas se faire manger par un fantome)
+        """
+
+        # condition finale ; si profondeur atteinte ou état gagnant/perdant
+        if i_depth == 0 or t_state.isWin() or t_state.isLose():
+            return self.evaluationFunction(t_state)
+
+        d_all_moves = {}
+        # Pacman à un indice 0, les autres fantomes ont un indice de 1 à 3
+        for str_legal_action in t_state.getLegalActions(PACMAN):    # pour chaque action légales
+            d_all_moves[str_legal_action] = self.minimise(i_depth-1,
+                                                          t_state.getNextState(PACMAN, str_legal_action),
+                                                          PACMAN+1)
+        str_max_val_move = max(d_all_moves)
+        self.move = str_max_val_move[1]
+        return str_max_val_move[0]
+
+    def minimise(self, i_depth, t_state: GameState, i_agent_index):
+        """
+        Partie minimalisante de l'algorithme de minimax.
+        Elle ne concerne que les agents fantomes (dont le but est d'atteindre pacman)
+        """
+        # condition finale ; si profondeur atteinte ou état gagnant/perdant
+        if i_depth == 0 or t_state.isWin() or t_state.isLose():
+            return self.evaluationFunction(t_state)
+
+        d_all_moves = {}
+        # Pacman à un indice 0, les autres fantomes ont un indice de 1 à 3
+        for str_legal_action in t_state.getLegalActions(i_agent_index):  # pour chaque action légales
+            # Tant que l'index d'agent est plus petit que 3, c'est que l'on évalue un fantome -> appel à minimise
+            if i_agent_index < t_state.getNumAgents():
+                d_all_moves[str_legal_action] = self.minimise(i_depth,
+                                                          t_state.getNextState(i_agent_index, str_legal_action),
+                                                          i_agent_index+1)
+            else:
+                d_all_moves[str_legal_action] = self.maximise(i_depth,
+                                                              t_state.getNextState(PACMAN, str_legal_action))
+        str_min_move = min(d_all_moves)
+        return str_min_move[0]
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
