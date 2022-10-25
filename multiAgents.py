@@ -91,7 +91,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         # condition finale ; si profondeur atteinte ou état gagnant/perdant
         if i_depth == 0 or t_state.isWin() or t_state.isLose():
-            return self.evaluationFunction(t_state), ''
+            return self.evaluationFunction(t_state), ''     # retourne un score et une action vide
 
         i_max_val, str_best_move = float('-inf'), ''
         # Pacman à un indice 0, les autres fantomes ont un indice de 1 à 2
@@ -99,7 +99,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             i_temp_val, str_temp_action = self.minimise(i_depth,
                                                         t_state.getNextState(PACMAN, str_legal_action),
                                                         PACMAN+1)
-            if i_max_val < i_temp_val:
+            if i_max_val < i_temp_val:  # si la valeur déterminée est meilleure que la valeur maximale ...
                 i_max_val, str_best_move = i_temp_val, str_legal_action
 
         return i_max_val, str_best_move
@@ -122,9 +122,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
                                                             t_state.getNextState(i_agent_index, str_legal_action),
                                                             i_agent_index+1)
             else:
-                i_temp_val, str_temp_action = self.minimise(i_depth-1,
-                                                            t_state.getNextState(PACMAN, str_legal_action),
-                                                            PACMAN)
+                i_temp_val, str_temp_action = self.maximise(i_depth-1,
+                                                            t_state.getNextState(i_agent_index, str_legal_action))
             if i_min_val > i_temp_val:
                 i_min_val, str_best_move = i_temp_val, str_legal_action
 
