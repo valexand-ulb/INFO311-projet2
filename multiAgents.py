@@ -164,7 +164,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 i_max_val, str_best_move = i_temp_val, str_legal_action
                 i_alpha = max(i_max_val, i_alpha)
 
-            if i_max_val < i_beta:  # si la valeur déterminée est moin bonne qu'une déterminée précédemment...
+            if i_max_val > i_beta:  # si la valeur déterminée est moin bonne qu'une déterminée précédemment...
                 return i_max_val, str_best_move     # ...pas besoin d'expendre l'arbre
 
         return i_max_val, str_best_move
