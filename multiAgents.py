@@ -140,7 +140,67 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.maximise(self.depth, state)[1]  # maximise/minimise retourne (valeur, action)
+
+    def maximise(self, i_depth, t_state: GameState, i_alpha=float('-inf'), i_beta=float('inf')):
+        """
+        Partie maximalisante de l'algorithme de minimax avec alpha-beta prunning.
+        Elle ne concerne que l'agent pacman (dont le but est de ne pas se faire manger par un fantome)
+        """
+
+        # condition finale ; si profondeur atteinte ou état gagnant/perdant
+        if i_depth == 0 or t_state.isWin() or t_state.isLose():
+            return self.evaluationFunction(t_state), ''     # retourne un score et une action vide
+
+        i_max_val, str_best_move = float('-inf'), ''
+        # Pacman à un indice 0, les autres fantomes ont un indice de 1 à 2
+        for str_legal_action in t_state.getLegalActions(PACMAN):    # pour chaque action légales
+            i_temp_val, str_temp_action = self.minimise(i_depth,
+                                                        t_state.getNextState(PACMAN, str_legal_action),
+                                                        PACMAN+1,
+                                                        i_alpha,
+                                                        i_beta)
+            if i_max_val < i_temp_val:  # si la valeur déterminée est meilleure que la valeur maximale ...
+                i_max_val, str_best_move = i_temp_val, str_legal_action
+                i_alpha = max(i_max_val, i_alpha)
+
+            if i_max_val < i_beta:  # si la valeur déterminée est moin bonne qu'une déterminée précédemment...
+                return i_max_val, str_best_move     # ...pas besoin d'expendre l'arbre
+
+        return i_max_val, str_best_move
+
+    def minimise(self, i_depth, t_state: GameState, i_agent_index, i_alpha, i_beta):
+        """
+        Partie minimalisante de l'algorithme de minimax avec alpha-beta prunning.
+        Elle ne concerne que les agents fantomes (dont le but est d'atteindre pacman)
+        """
+        # condition finale ; si profondeur atteinte ou état gagnant/perdant
+        if i_depth == 0 or t_state.isWin() or t_state.isLose():
+            return self.evaluationFunction(t_state), ''
+
+        i_min_val, str_best_move = float('inf'), ''
+        # Pacman à un indice 0, les autres fantomes ont un indice de 1 à 2
+        for str_legal_action in t_state.getLegalActions(i_agent_index):  # pour chaque action légales d'un fantome
+            # Tant que l'index d'agent est plus petit que 2, c'est que l'on évalue un fantome -> appel à minimise
+            if i_agent_index < t_state.getNumAgents()-1:
+                i_temp_val, str_temp_action = self.minimise(i_depth,
+                                                            t_state.getNextState(i_agent_index, str_legal_action),
+                                                            i_agent_index+1,
+                                                            i_alpha,
+                                                            i_beta)
+            else:
+                i_temp_val, str_temp_action = self.maximise(i_depth-1,
+                                                            t_state.getNextState(i_agent_index, str_legal_action),
+                                                            i_alpha,
+                                                            i_beta)
+            if i_min_val > i_temp_val:
+                i_min_val, str_best_move = i_temp_val, str_legal_action
+                i_beta = min(i_beta, i_min_val)
+
+            if i_min_val < i_alpha:  # si la valeur trouvée est moin bonne que la précédente...
+                return i_min_val, str_best_move     # ...pas besoin d'étendre l'arbre
+
+        return i_min_val, str_best_move
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
