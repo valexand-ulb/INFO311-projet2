@@ -139,7 +139,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
+        "*** Encore selon le pseudocode présent sur wikipédia : https://fr.wikipedia.org/wiki/Algorithme_minimax ***"
+        "*** avec l'ajout des variables alpha et beta ***"
         return self.maximise(self.depth, state)[1]  # maximise/minimise retourne (valeur, action)
 
     def maximise(self, i_depth, t_state: GameState, i_alpha=float('-inf'), i_beta=float('inf')):
@@ -214,8 +215,61 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        "*** Encore selon le pseudocode présent sur wikipédia : https://fr.wikipedia.org/wiki/Algorithme_minimax ***"
+        "*** avec l'utilisation des slides S6 page 31***"
+        return self.maximise(self.depth, state)[1]
+
+    def maximise(self, i_depth, t_state: GameState):
+        """
+        Partie maximalisante de l'algorithme de minimax.
+        Elle ne concerne que l'agent pacman (dont le but est de ne pas se faire manger par un fantome)
+        """
+
+        # condition finale ; si profondeur atteinte ou état gagnant/perdant
+        if i_depth == 0 or t_state.isWin() or t_state.isLose():
+            return self.evaluationFunction(t_state), ''     # retourne un score et une action vide
+
+        i_max_val, str_best_move = float('-inf'), ''
+        # Pacman à un indice 0, les autres fantomes ont un indice de 1 à 2
+        for str_legal_action in t_state.getLegalActions(PACMAN):    # pour chaque action légales
+            i_temp_val, str_temp_action = self.minimise(i_depth,
+                                                        t_state.getNextState(PACMAN, str_legal_action),
+                                                        PACMAN+1)
+            if i_max_val < i_temp_val:  # si la valeur déterminée est meilleure que la valeur maximale ...
+                i_max_val, str_best_move = i_temp_val, str_legal_action
+
+        return i_max_val, str_best_move
+
+    def minimise(self, i_depth, t_state: GameState, i_agent_index):
+        """
+        La méthode garde le nom de minimise même si il est plus convenable de lui attribuer un autre nom
+        """
+        # condition finale ; si profondeur atteinte ou état gagnant/perdant
+        if i_depth == 0 or t_state.isWin() or t_state.isLose():
+            return self.evaluationFunction(t_state), ''
+
+        i_sum_val, str_best_move = 0, ''
+        # Pacman à un indice 0, les autres fantomes ont un indice de 1 à 2
+        l_next_legals_actions = t_state.getLegalActions(i_agent_index)
+        for str_legal_action in l_next_legals_actions:  # pour chaque action légales d'un fantome
+            i_prob = 1 / len(l_next_legals_actions)     # probabilité d'une action
+            # Tant que l'index d'agent est plus petit que 2, c'est que l'on évalue un fantome -> appel à minimise
+            if i_agent_index < t_state.getNumAgents()-1:
+
+                i_temp_val, str_temp_action = self.minimise(i_depth,
+                                                            t_state.getNextState(i_agent_index, str_legal_action),
+                                                            i_agent_index+1)
+                i_sum_val += i_prob * i_temp_val    # selon la formule du slide : sum = P(a) * value (Result(s,a))
+
+            else:
+                i_temp_val, str_temp_action = self.maximise(i_depth-1,
+                                                            t_state.getNextState(i_agent_index, str_legal_action))
+                i_sum_val += i_prob * i_temp_val    # selon la formule du slide : sum = P(a) * value (Result(s,a))
+
+            if i_sum_val > i_temp_val:
+                i_min_val, str_best_move = i_temp_val, str_legal_action
+
+        return i_sum_val, str_best_move
 
 def betterEvaluationFunction(state: GameState):
     """
